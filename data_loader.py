@@ -18,9 +18,8 @@ SEED = 20034
 
 # input: a sequence of tokens, and a token_to_index dictionary
 # output: a LongTensor variable to encode the sequence of idxs
-def prepare_sequence(seq, to_ix, cuda=False):
-    if len(sys.argv)>6:
-        if sys.argv[6]=='rev': seq=reversed(seq)
+def prepare_sequence(seq, to_ix, cuda=False, rev=False):
+    if rev: seq=reversed(seq)
     var = autograd.Variable(torch.LongTensor([to_ix[w] for w in seq]))
     return var
 
