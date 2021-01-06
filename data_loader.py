@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
-# Command line arguments, in this order:
-# * number of individual pairs in the model
-# * number of relations in the model
-# * n - maximal complexity of examples
-# * branching type (l,r,rl)
-# * (optional) proportion of examples of complexity n included in training data
-# * (optional) "rev" if we want to reverse the strings of the language 
-import sys
+# loads interpreted language data folowing set parameters.
 import torch
 import torch.autograd as autograd
 import codecs
@@ -44,17 +37,17 @@ def build_label_to_ix(labels):
             label_to_ix[label] = len(label_to_ix)
 
 
-def load_MR_data():
+def load_MR_data(params):
 
     print('generating data')
-    num_pairs=int(sys.argv[1])
-    rel_num=int(sys.argv[2])
+    num_pairs=params.num_pairs
+    rel_num=params.rel_num
     L=createdata.InterpretedLanguage(rel_num,num_pairs)
     k=num_pairs*5*rel_num
     
-    branching=sys.argv[4]
-    complexity=int(sys.argv[3])
-    thedata = L.allexamples(branching,complexity=complexity-1)#L.randomexamples(k,branching,complexity=2)
+    branching=params.branching
+    complexity=params.complexity
+    thedata = L.allexamples(branching,complexity=complexity-1)
 
     random.seed(SEED)
     random.shuffle(thedata)
@@ -63,16 +56,11 @@ def load_MR_data():
     devtest=L.allexamples(branching,complexity=complexity,min_complexity=complexity)
     random.shuffle(devtest)
     datasize=len(devtest)
-    #datasize=len(thedata)
     
-    if len(sys.argv)>5: p=float(sys.argv[5])
-    else: p=0.8
-    #train_data = L.allexamples(branching,complexity=2)+devtest[:int(datasize*0.5)]#
+    p=params.top_complexity_share_in_training
     train_data = thedata+devtest[:int(datasize*p)]
-    #dev_data = devtest[int(datasize*0.5):int(datasize*0.6)]
     dev_data = devtest[int(datasize*p):int(datasize*(p+(1-p)*0.55))]
-    #test_data = devtest[int(datasize*0.6):]
-    test_data = devtest[int(datasize*(p+(1-p)*0.55)):]#L.allexamples(branching,complexity=6,min_complexity=6)
+    test_data = devtest[int(datasize*(p+(1-p)*0.55)):]
     print('total data: %s; train: %s; dev: %s; test: %s' %(datasize+len(thedata),len(train_data),len(dev_data),len(test_data)))
 
     random.shuffle(train_data)

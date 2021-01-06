@@ -11,8 +11,6 @@ import random
 torch.set_num_threads(8)
 import argparse
 
-hidden=256
-
 def gentle_curriculum(i,num_epochs):
     if i < num_epochs:
         return 2+2*i/10
@@ -20,6 +18,8 @@ def gentle_curriculum(i,num_epochs):
         return 99999
 
 def no_curriculum(i,num_epochs): return 99999
+
+lookup={"no_curriculum":no_curriculum,"gentle_curriculum":gentle_curriculum}
 
 class LSTMClassifier(nn.Module):
 
@@ -64,17 +64,22 @@ class LSTMClassifier(nn.Module):
 
 def get_accuracy(truth, pred):
      assert len(truth)==len(pred)
+     assert len(truth)>0
      right = 0
      for i in range(len(truth)):
          if truth[i]==pred[i]:
              right += 1.0
      return right/len(truth)
 
-def train(bidirectional=False,architecture="SRN",curriculum=gentle_curriculum,rev=False):
-    EMBEDDING_DIM = 256
-    train_data, dev_data, test_data, word_to_ix, label_to_ix, complexity = data_loader.load_MR_data()
-    HIDDEN_DIM = hidden
-    EPOCH = 100
+def train(params,report,seed):
+    bidirectional=params.bidirectional
+    rev=params.rev
+    architecture=params.architecture
+    curriculum=lookup[params.curriculum]
+    EMBEDDING_DIM = params.emb_dim
+    EPOCH = params.epochs
+    HIDDEN_DIM = params.hidden
+    train_data, dev_data, test_data, word_to_ix, label_to_ix, complexity = data_loader.load_MR_data(params)
     best_dev_acc = 0.0
     model = LSTMClassifier(embedding_dim=EMBEDDING_DIM,hidden_dim=HIDDEN_DIM,
                            vocab_size=len(word_to_ix),label_size=len(label_to_ix),num_layers=1,bidirectional=bidirectional,rnn=architecture)
@@ -112,10 +117,10 @@ def train(bidirectional=False,architecture="SRN",curriculum=gentle_curriculum,re
         for c in sorted(bysize.keys()): print("length"+str(c)+": "+str(evaluate(model, bysize[c], loss_function, word_to_ix, label_to_ix, 'train', rev=rev)))
     print("training accuracies by size:")
     statsbysize(train_data)
-    #print("test accuracies by size:")
+    print("test accuracies by size:")
     statsbysize(test_data)
     print("test accuracy:"+str(test_acc))
-    report.append((s,test_acc))
+    report.append((seed,test_acc))
 
 def evaluate(model, data, loss_function, word_to_ix, label_to_ix, name ='dev', rev=False):
     model.eval()
@@ -145,7 +150,6 @@ def train_epoch(model, train_data, loss_function, optimizer, word_to_ix, label_t
     model.train()
     
     avg_loss = 0.0
-    count = 0
     truth_res = []
     pred_res = []
     batch_sent = []
@@ -162,10 +166,6 @@ def train_epoch(model, train_data, loss_function, optimizer, word_to_ix, label_t
         model.zero_grad()
         loss = loss_function(pred, label)
         avg_loss += loss.item()
-        count += 1
-        if count % 500 == 0:
-            print('epoch: %d iterations: %d loss :%g' % (i, count, loss.data[0]))
-
         loss.backward()
         optimizer.step()
     avg_loss /= len(train_data)
@@ -181,40 +181,44 @@ parser.add_argument('--rev', dest='rev', type=bool, default=False)
 parser.add_argument('--cur', dest='curriculum', type=str, default="gentle_curriculum")
 parser.add_argument('--arch', dest='architecture', type=str, default="LSTM")
 parser.add_argument('--bidir', dest='bidirectional', type=bool, default=False)
+parser.add_argument('--embdim', dest='emb_dim', type=int, default=256)
+parser.add_argument('--epochs', dest='epochs', type=int, default=100)
+parser.add_argument('--hidden', dest='hidden', type=int, default=256)
+parser.add_argument('--runs', dest='runs', type=int, default=10)
+parser.add_argument('-o', dest='outfile', type=str, default="report.tsv")
 params = parser.parse_args()
 
-report=[]
-
-
-
-runs=10
-
-seeds=[]
-for i in range(runs):
-    seeds.append(random.randint(0,4294967296))
-
-for s in seeds:
-    torch.manual_seed(s)
-    random.seed(s)
-    train(bidirectional=params.bidirectional,rev=params.rev)
-
-test_acc=0.0
-perf_acc=0.0
-for n in report:
-    test_acc+=n[1]
-    perf_acc+=float(n[1]==1.0)
-
-test_acc=test_acc/runs
-perf_acc=perf_acc/runs
-print("test accuracy:")
-print(test_acc)
-print("perfect accuracy percentage:")
-print(perf_acc)
-
-with open('report.tsv','w') as o:
-    o.write(params+"\n")
-    o.write("avg test accuracy: "+test_acc+"\n")
-    o.write("perfect test accuracy percentage: "+perf_acc+"\n")
-    o.write("detailed report, random seed vs. test accuracy:\n")
+#run a single parameter setting
+def run_with(params):
+    report=[]
+    seeds=[]
+    runs=params.runs
+    for i in range(runs):
+        seeds.append(random.randint(0,4294967296))
+    
+    for s in seeds:
+        torch.manual_seed(s)
+        random.seed(s)
+        train(params,report,s)
+    
+    test_acc=0.0
+    perf_acc=0.0
     for n in report:
+        test_acc+=n[1]
+        perf_acc+=float(n[1]==1.0)
+    
+    test_acc=test_acc/runs
+    perf_acc=perf_acc/runs
+    print("test accuracy:",test_acc)
+    print("perfect accuracy percentage:",perf_acc)
+    
+    with open(params.outfile,'a') as o:
+        o.write(str(params)+"\n")
+        o.write("avg test accuracy: "+str(test_acc)+"\n")
+        o.write("perfect test accuracy percentage: "+str(perf_acc)+"\n")
+        o.write("detailed report, random seed vs. test accuracy:\n")
+        for n in report:
             o.write(str(n[0])+"\t"+str(n[1])+"\n")
+
+if __name__ == "__main__":
+    run_with(params)
