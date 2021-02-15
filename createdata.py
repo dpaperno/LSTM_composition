@@ -7,11 +7,20 @@ import random
 '''List of reserved characters
 
 at least at the level of logical form the basic elements of the language are encoded 
-as characters. Some characters are reserved for relation names or grammatical words'''
+as characters. Some characters are reserved for relation names or grammatical words.
+
+p = parent
+f = friend
+e = enemy
+c = child
+t = the
+o = of
+s = \'s
+'''
 reserved_chars=['p','f','e','c','t','o','s']
 
 def newUniverse(n):
-	"""generate a list of n names - characters outside of the reserved list"""
+	"""generate a list of n names, which are characters outside of the reserved list"""
 	z=[]
 	i=ord('a')
 	#add entity names to the list starting from 'a'
@@ -25,8 +34,9 @@ def newUniverse(n):
 class InterpretedLanguage:
     """InterpretedLanguage class of sets of interpreted strings
 
-    Initialized with rel_num relations (up to 4) and 2*num_pairs entities.
-    For convenience of forming symmetric relations, there is always an even number
+    Initialized with rel_num relations (up to 4: parent, friend, enemy, child) and 2*num_pairs entities (e.g. entities
+    a,b,d,g for 2 pairs).
+    For the convenience of forming symmetric relations, there is always an even number
     of entities."""
     def __init__(self, rel_num,num_pairs):
         if rel_num+3>len(reserved_chars): raise(ValueError)
@@ -56,9 +66,10 @@ class InterpretedLanguage:
         self.names=names
 
     def examples(self,i):
-        '''returns all logical forms of complexity (length) i 
+        '''returns all logical forms of complexity i
         
-        A logical form is a string of relation chars followed by an entity name char'''
+        A logical form is a string of relation chars followed by an entity name char 
+        The complexity of a logical form equals its length in characters'''
         if i<=1: ex=self.names
         else: ex=[x+y for x in self.rel for y in self.examples(i-1)]
         return ex

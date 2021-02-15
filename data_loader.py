@@ -9,18 +9,23 @@ import createdata
 
 SEED = 20034
 
-# input: a sequence of tokens, and a token_to_index dictionary
-# output: a LongTensor variable to encode the sequence of idxs
 def prepare_sequence(seq, to_ix, cuda=False, rev=False):
+    """encodes and possibly reverse a sequence of tokens
+    input: a sequence of tokens, and a token_to_index dictionary
+    output: a LongTensor variable to encode the sequence of idxs
+
+    """
     if rev: seq=reversed(seq)
     var = autograd.Variable(torch.LongTensor([to_ix[w] for w in seq]))
     return var
 
 def prepare_label(label,label_to_ix, cuda=False):
+    """encode the label of the sequence"""
     var = autograd.Variable(torch.LongTensor([label_to_ix[label]]))
     return var
 
 def build_token_to_ix(sentences):
+    """build a token-to-index dictionary from a list of sentences"""
     token_to_ix = dict()
     print(len(sentences))
     for sent in sentences:
@@ -31,6 +36,7 @@ def build_token_to_ix(sentences):
     return token_to_ix
 
 def build_label_to_ix(labels):
+    """build a label-to-index dictionar from a list"""
     label_to_ix = dict()
     for label in labels:
         if label not in label_to_ix:
@@ -38,27 +44,34 @@ def build_label_to_ix(labels):
 
 
 def load_MR_data(params):
-
+    """returns training, validation and test data from an interpreted language following parameters in a namespace"""
     print('generating data')
+    #read individual parameter: number of entity pairs
     num_pairs=params.num_pairs
+    #read individual parameters: number of relation names
     rel_num=params.rel_num
+    #create a random interpreted language with given vocabulary size parameters
     L=createdata.InterpretedLanguage(rel_num,num_pairs)
     k=num_pairs*5*rel_num
     
     branching=params.branching
+    min_complexity=params.min_complexity
     complexity=params.complexity
-    thedata = L.allexamples(branching,complexity=complexity-1)
+    thedata = L.allexamples(branching,complexity=min_complexity-1)
 
     random.seed(SEED)
     random.shuffle(thedata)
     datasize=len(thedata)
     
-    devtest=L.allexamples(branching,complexity=complexity,min_complexity=complexity)
+    #as development and test data, we use all examples of the highest complexity
+    devtest=L.allexamples(branching,complexity=complexity,min_complexity=min_complexity)
     random.shuffle(devtest)
     datasize=len(devtest)
     
     p=params.top_complexity_share_in_training
+    #adding a shatre of the highest complexity data to the training partition
     train_data = thedata+devtest[:int(datasize*p)]
+    #splitting parts of the remaining highest complexity data into validation and test partitions
     dev_data = devtest[int(datasize*p):int(datasize*(p+(1-p)*0.55))]
     test_data = devtest[int(datasize*(p+(1-p)*0.55)):]
     print('total data: %s; train: %s; dev: %s; test: %s' %(datasize+len(thedata),len(train_data),len(dev_data),len(test_data)))
@@ -66,7 +79,7 @@ def load_MR_data(params):
     random.shuffle(train_data)
     random.shuffle(dev_data)
     random.shuffle(test_data)
-
+    #print the sizes of train, validation and test partitions
     print('train:',len(train_data),'dev:',len(dev_data),'test:',len(test_data))
 
     word_to_ix = build_token_to_ix([s for s,_ in train_data+dev_data+test_data])
