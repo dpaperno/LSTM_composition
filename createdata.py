@@ -19,6 +19,8 @@ s = \'s
 '''
 reserved_chars=['p','f','e','c','t','o','s']
 
+translation={'p':'parent','f':'friend','e':'enemy', 'c':'child', 't':'the', 'o' : 'of','s' : '\'s','a' : 'Ann','b' : 'Bill','g' : 'Garry', 'd' : 'Donna'}
+
 def newUniverse(n):
 	"""generate a list of n names, which are characters outside of the reserved list"""
 	z=[]
@@ -102,6 +104,16 @@ class InterpretedLanguage:
             else: raise(KeyError)
         else: raise(KeyError)
 
+    def translate(self,c): 
+        '''replaces all word identifiers with actual words
+        For example, self.translate("tfoa") is ["the", "friend", "of", "Ann"]
+        '''
+        output=[]
+        for i in c:
+            if i in translation: output.append(translation[i])
+            else: output.append(i)
+        return output
+
     def lines(self,data,b):
         """Interprets and expresses logical forms from a list
         
@@ -129,7 +141,7 @@ class InterpretedLanguage:
         sample = []
         for c in range(min_complexity,complexity+1): sample+=self.examples(c)
         for e in sample:
-            line=self.express(e,b)
+            line=self.translate(self.express(e,b))
             category=self.interpret(e)
             z.append((line,category))
         return z

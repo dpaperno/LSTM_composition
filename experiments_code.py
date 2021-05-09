@@ -11,7 +11,7 @@ for d in ["l","r"]:
         for c in range(3,8):
             params.complexity=c
             params.min_complexity=c
-            for cu in ["gentle_curriculum","no_curriculum"]:
+            for cu in ["gentle_curriculum","no_curriculum","slow_curriculum","steep_curriculum"]:
                 params.curriculum=cu
                 run_with(params)
 

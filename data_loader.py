@@ -36,14 +36,14 @@ def build_token_to_ix(sentences):
     return token_to_ix
 
 def build_label_to_ix(labels):
-    """build a label-to-index dictionar from a list"""
+    """build a label-to-index dictionary from a list"""
     label_to_ix = dict()
     for label in labels:
         if label not in label_to_ix:
             label_to_ix[label] = len(label_to_ix)
 
 
-def load_MR_data(params):
+def load_data(params):
     """returns training, validation and test data from an interpreted language following parameters in a namespace"""
     print('generating data')
     #read individual parameter: number of entity pairs
@@ -87,8 +87,3 @@ def load_MR_data(params):
     print('vocab size:',len(word_to_ix),'label size:',len(label_to_ix))
     print('loading data done!')
     return train_data,dev_data,test_data,word_to_ix,label_to_ix,complexity
-
-
-def load_MR_data_batch():
-
-    pass

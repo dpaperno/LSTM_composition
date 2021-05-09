@@ -94,7 +94,7 @@ def train(params,report,seed,debug=False):
     EMBEDDING_DIM = params.emb_dim
     EPOCH = params.epochs
     HIDDEN_DIM = params.hidden
-    train_data, dev_data, test_data, word_to_ix, label_to_ix, complexity = data_loader.load_MR_data(params)
+    train_data, dev_data, test_data, word_to_ix, label_to_ix, complexity = data_loader.load_data(params)
     best_dev_acc = 0.0
     model = LSTMClassifier(embedding_dim=EMBEDDING_DIM,hidden_dim=HIDDEN_DIM,
                            vocab_size=len(word_to_ix),label_size=len(label_to_ix),num_layers=1,bidirectional=bidirectional,rnn=architecture)
@@ -103,7 +103,7 @@ def train(params,report,seed,debug=False):
     no_up = 0
     testlengths=[len(x[0]) for x in train_data]
     for i in range(EPOCH):
-        train_data_filtered = [x for x in train_data if len(x[0]) < curriculum(i,EPOCH)]
+        train_data_filtered = [x for x in train_data if len(x[0])-x[0].count("the") < curriculum(i,EPOCH)]
         if debug: print([x[0] for x in train_data_filtered])
         if debug: print(len(train_data_filtered))
         random.shuffle(train_data_filtered)
@@ -115,9 +115,10 @@ def train(params,report,seed,debug=False):
         print("test accuracy:",test_acc)
         if dev_acc > best_dev_acc:
             best_dev_acc = dev_acc
-            os.system('rm mr_best_model_acc_*.model')
-            if debug: print('New Best Dev!!!')
-            torch.save(model.state_dict(), 'best_models/mr_best_model_acc_' + str(int(test_acc*10000)) + '.model')
+            if debug: 
+                os.system('rm best_models/best_model_acc_*.model')
+                print('New Best Dev!!!')
+                torch.save(model.state_dict(), 'best_models/best_model_acc_' + str(int(test_acc*10000)) + '.model')
             no_up = 0
         else:
             no_up += 1
