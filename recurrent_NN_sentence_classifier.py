@@ -36,10 +36,10 @@ def no_curriculum(i,num_epochs): return 99999
 
 lookup={"no_curriculum":no_curriculum,"gentle_curriculum":gentle_curriculum,"steep_curriculum":steep_curriculum,"slow_curriculum":slow_curriculum}
 
-class LSTMClassifier(nn.Module):
-    """Class of recurrent sequence classifiers"""
+class recurrentClassifier(nn.Module):
+    """Class of recurrent sequence classifiers. Supports LSTM, GRU and simple RNN"""
     def __init__(self, embedding_dim, hidden_dim, vocab_size, label_size, num_layers,bidirectional,rnn="LSTM"):
-        super(LSTMClassifier, self).__init__()
+        super(recurrentClassifier, self).__init__()
         self.hidden_dim = hidden_dim
         self.num_layers=num_layers
         self.num_directions=1+int(bidirectional)
@@ -96,7 +96,7 @@ def train(params,report,seed,debug=False):
     HIDDEN_DIM = params.hidden
     train_data, dev_data, test_data, word_to_ix, label_to_ix, complexity = data_loader.load_data(params)
     best_dev_acc = 0.0
-    model = LSTMClassifier(embedding_dim=EMBEDDING_DIM,hidden_dim=HIDDEN_DIM,
+    model = recurrentClassifier(embedding_dim=EMBEDDING_DIM,hidden_dim=HIDDEN_DIM,
                            vocab_size=len(word_to_ix),label_size=len(label_to_ix),num_layers=1,bidirectional=bidirectional,rnn=architecture)
     loss_function = nn.NLLLoss()
     optimizer = optim.Adam(model.parameters(),lr = 1e-3,weight_decay=9e-3)
@@ -192,7 +192,6 @@ parser = argparse.ArgumentParser(description='creates an interpreted language of
 parser.add_argument('--num_pairs', dest='num_pairs', type=int, default=2)
 parser.add_argument('--num_rels', dest='rel_num', type=int, default=2)
 parser.add_argument('-c', dest='complexity', type=int, default=3)
-parser.add_argument('--min_c', dest='min_complexity', type=int, default=parser.parse_args().complexity)
 parser.add_argument('-b', dest='branching', type=str, default="l")
 parser.add_argument('--top_complexity_in_train', dest='top_complexity_share_in_training', type=float, default=0.8)
 parser.add_argument('--rev', dest='rev', type=bool, default=False)
@@ -204,7 +203,9 @@ parser.add_argument('--epochs', dest='epochs', type=int, default=100)
 parser.add_argument('--hidden', dest='hidden', type=int, default=256)
 parser.add_argument('--runs', dest='runs', type=int, default=10)
 parser.add_argument('-o', dest='outfile', type=str, default="report.tsv")
+parser.add_argument('--min_c', dest='min_complexity', type=int)
 params = parser.parse_args()
+if params.min_complexity is None: params.min_complexity=params.complexity
 
 def run_with(params):
     """run a single parameter setting, incl. a specified number of runs, and write to report"""

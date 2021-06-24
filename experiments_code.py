@@ -1,8 +1,9 @@
-from LSTM_sentence_classifier import *
+from recurrent_NN_sentence_classifier import *
 
 #Experiment code
 #For Table 1
 params = parser.parse_args()
+if params.min_complexity is None: params.min_complexity=params.complexity
 params.rel_num=4
 for d in ["l","r"]: 
     params.branching=d
@@ -17,6 +18,7 @@ for d in ["l","r"]:
 
 #For Table 2
 params = parser.parse_args()
+if params.min_complexity is None: params.min_complexity=params.complexity
 params.rel_num=4
 architectures=["LSTM","GRU","SRN"]
 for i in range(5):
@@ -30,6 +32,7 @@ for i in range(5):
 
 from LSTM_sentence_classifier import *
 params = parser.parse_args()
+if params.min_complexity is None: params.min_complexity=params.complexity
 params.rel_num=4
 params.top_complexity_share_in_training=0.0
 params.min_complexity=4

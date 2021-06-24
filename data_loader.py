@@ -61,19 +61,18 @@ def load_data(params):
 
     random.seed(SEED)
     random.shuffle(thedata)
-    datasize=len(thedata)
     
     #as development and test data, we use all examples of the highest complexity
-    devtest=L.allexamples(branching,complexity=complexity,min_complexity=min_complexity)
-    random.shuffle(devtest)
-    datasize=len(devtest)
+    high_complexity_data=L.allexamples(branching,complexity=complexity,min_complexity=min_complexity)
+    random.shuffle(high_complexity_data)
+    datasize=len(high_complexity_data)
     
     p=params.top_complexity_share_in_training
     #adding a shatre of the highest complexity data to the training partition
-    train_data = thedata+devtest[:int(datasize*p)]
+    train_data = thedata+high_complexity_data[:int(datasize*p)]
     #splitting parts of the remaining highest complexity data into validation and test partitions
-    dev_data = devtest[int(datasize*p):int(datasize*(p+(1-p)*0.55))]
-    test_data = devtest[int(datasize*(p+(1-p)*0.55)):]
+    dev_data = high_complexity_data[int(datasize*p):int(datasize*(p+(1-p)*0.55))]
+    test_data = high_complexity_data[int(datasize*(p+(1-p)*0.55)):]
     print('total data: %s; train: %s; dev: %s; test: %s' %(datasize+len(thedata),len(train_data),len(dev_data),len(test_data)))
 
     random.shuffle(train_data)
