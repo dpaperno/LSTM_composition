@@ -170,13 +170,11 @@ def evaluate(model, data, loss_function, word_to_ix, label_to_ix, name ='dev', r
     return acc
 
 def detailed_results(model, data, resf, loss_function, word_to_ix, label_to_ix, name ='dev', rev=False):
+    '''Writes to output __resf__ the __model__'s detailed predictions for all examples in __data__'''
     model.eval()
     truth_res = []
     pred_res = []
-    predictions = []
-#    true_pred = []
     losses = []
-    ix_2_label={label_to_ix[x]:x for x in label_to_ix}
     for sent, label in data:
         truth_res.append(label_to_ix[label])
         # detaching it from its history on the last instance.
@@ -188,9 +186,6 @@ def detailed_results(model, data, resf, loss_function, word_to_ix, label_to_ix, 
         pred_res.append(pred_label)
         loss = loss_function(pred, label)
         losses.append(loss.item())
-#        prediction=ix_2_label[pred_label]
-#        predictions.append(pred_label)
-#        true_pred.append(pred_label==label_to_ix[label])
     for i in range(len(data)):
         resf.write('\t'.join([str(data[i][0]),str(truth_res[i]),str(pred_res[i]),str(losses[i]),str(truth_res[i]==pred_res[i])])+'\n')
     return None
