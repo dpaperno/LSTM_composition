@@ -85,7 +85,7 @@ def get_accuracy(truth, pred):
              right += 1.0
      return right/len(truth)
 
-def train(params,report,seed,debug=False):
+def train(params,report,seed,debug=False,detalization=False,det_f="detf.txt"):
     """Action happens here for a single run. Data is generated, a recurrent model is initialized, trained and evaluated."""
     bidirectional=params.bidirectional
     rev=params.rev
@@ -126,9 +126,9 @@ def train(params,report,seed,debug=False):
                 break
     
     def statsbysize(dataset):
-        bysize=defaultdict(set)
+        bysize=defaultdict(list)
         for i in dataset:
-            bysize[len(i[0])].add(i)
+            bysize[len(i[0])].append(i)
         for c in sorted(bysize.keys()): print("length"+str(c)+": "+str(evaluate(model, bysize[c], loss_function, word_to_ix, label_to_ix, 'train', rev=rev)))
     if debug: 
         print("training accuracies by size:")
@@ -136,6 +136,15 @@ def train(params,report,seed,debug=False):
         print("test accuracies by size:")
         statsbysize(test_data)
         print("test accuracy:"+str(test_acc))
+    if detalization: 
+        with open(det_f,'a') as out_det:
+            out_det.write(str(params)+'\n')
+            out_det.write('train data:\n')
+            detailed_results(model, train_data, out_det, loss_function, word_to_ix, label_to_ix)
+            out_det.write('dev data:\n')
+            detailed_results(model, dev_data, out_det, loss_function, word_to_ix, label_to_ix)
+            out_det.write('test data:\n')
+            detailed_results(model, test_data, out_det, loss_function, word_to_ix, label_to_ix)
     report.append((seed,test_acc))
 
 def evaluate(model, data, loss_function, word_to_ix, label_to_ix, name ='dev', rev=False):
@@ -159,6 +168,32 @@ def evaluate(model, data, loss_function, word_to_ix, label_to_ix, name ='dev', r
     acc = get_accuracy(truth_res, pred_res)
     print(name + ' avg_loss:%g %s acc:%g' % (avg_loss,name, acc ))
     return acc
+
+def detailed_results(model, data, resf, loss_function, word_to_ix, label_to_ix, name ='dev', rev=False):
+    model.eval()
+    truth_res = []
+    pred_res = []
+    predictions = []
+#    true_pred = []
+    losses = []
+    ix_2_label={label_to_ix[x]:x for x in label_to_ix}
+    for sent, label in data:
+        truth_res.append(label_to_ix[label])
+        # detaching it from its history on the last instance.
+        model.hidden = model.init_hidden()
+        sent = data_loader.prepare_sequence(sent, word_to_ix, rev=rev)
+        label = data_loader.prepare_label(label, label_to_ix)
+        pred = model(sent)
+        pred_label = pred.data.max(1)[1].numpy()
+        pred_res.append(pred_label)
+        loss = loss_function(pred, label)
+        losses.append(loss.item())
+#        prediction=ix_2_label[pred_label]
+#        predictions.append(pred_label)
+#        true_pred.append(pred_label==label_to_ix[label])
+    for i in range(len(data)):
+        resf.write('\t'.join([str(data[i][0]),str(truth_res[i]),str(pred_res[i]),str(losses[i]),str(truth_res[i]==pred_res[i])])+'\n')
+    return None
 
 
 
