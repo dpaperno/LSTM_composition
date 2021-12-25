@@ -66,11 +66,9 @@ class recurrentClassifier(nn.Module):
         embeds = self.word_embeddings(sentence)
         x = embeds.view(len(sentence), 1, -1)
         lstm_out, self.hidden = self.lstm(x, self.hidden)
-        if self.bidirectional: z=torch.cat((lstm_out[-1,:self.hidden_dim],lstm_out[0,self.hidden_dim:]),0)
+        if self.bidirectional: z=torch.cat((torch.narrow(lstm_out[-1],1,0,self.hidden_dim),torch.narrow(lstm_out[0],1,self.hidden_dim,self.hidden_dim)),1)
         else: z=lstm_out[-1]
         y  = self.hidden2label(z)
-#        y  = self.hidden2label(torch.cat([lstm_out[0],lstm_out[-1]]))
-#        y  = self.hidden2label(lstm_out[-1])
         log_probs = F.log_softmax(y)
         return log_probs
 
