@@ -142,7 +142,7 @@ class InterpretedLanguage:
         for c in range(min_complexity,complexity+1): sample+=self.examples(c)
         for e in sample:
             line=self.translate(self.express(e,b))
-            category=self.interpret(e)
+            category=self.translate(self.interpret(e))
             z.append((line,category))
         return z
 
