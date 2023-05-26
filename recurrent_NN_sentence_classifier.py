@@ -83,9 +83,10 @@ def get_accuracy(truth, pred):
              right += 1.0
      return right/len(truth)
 
-def train(params,report,seed,debug=False,detalization=False,det_f="detf.txt"):
+def train(params,report,seed,debug=False,det_f="detf.txt"):
     """Action happens here for a single run. Data is generated, a recurrent model is initialized, trained and evaluated."""
     bidirectional=params.bidirectional
+    detalization=params.detalization
     rev=params.rev
     architecture=params.architecture
     curriculum=lookup[params.curriculum]
@@ -226,6 +227,7 @@ parser.add_argument('--rev', dest='rev', type=bool, default=False)
 parser.add_argument('--cur', dest='curriculum', type=str, default="gentle_curriculum")
 parser.add_argument('--arch', dest='architecture', type=str, default="LSTM")
 parser.add_argument('--bidir', dest='bidirectional', type=bool, default=False)
+parser.add_argument('--detail', dest='detalization', type=bool, default=False)
 parser.add_argument('--embdim', dest='emb_dim', type=int, default=256)
 parser.add_argument('--epochs', dest='epochs', type=int, default=100)
 parser.add_argument('--hidden', dest='hidden', type=int, default=256)
