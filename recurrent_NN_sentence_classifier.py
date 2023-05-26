@@ -174,17 +174,20 @@ def detailed_results(model, data, resf, loss_function, word_to_ix, label_to_ix, 
     truth_res = []
     pred_res = []
     losses = []
+    ix_to_label={}
+    for l in label_to_ix: ix_to_label[label_to_ix[l]]=l
     for sent, label in data:
-        truth_res.append(label_to_ix[label])
+        truth_res.append(label)#(label_to_ix[label])
         # detaching it from its history on the last instance.
         model.hidden = model.init_hidden()
         sent = data_loader.prepare_sequence(sent, word_to_ix, rev=rev)
         label = data_loader.prepare_label(label, label_to_ix)
         pred = model(sent)
-        pred_label = pred.data.max(1)[1].numpy()
+        pred_label = ix_to_label(pred.data.max(1)[1].numpy()[0])
         pred_res.append(pred_label)
         loss = loss_function(pred, label)
         losses.append(loss.item())
+    resf.write('\t'.join(["input string","true label","predicted label","loss","correct"+'\n')
     for i in range(len(data)):
         resf.write('\t'.join([str(data[i][0]),str(truth_res[i]),str(pred_res[i]),str(losses[i]),str(truth_res[i]==pred_res[i])])+'\n')
     return None
