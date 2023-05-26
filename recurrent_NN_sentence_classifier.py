@@ -83,11 +83,12 @@ def get_accuracy(truth, pred):
              right += 1.0
      return right/len(truth)
 
-def train(params,report,seed,debug=False,det_f="detf.txt"):
+def train(params,report,seed,debug=False,det_f="detf.txt",early_early_stop=False):
     """Action happens here for a single run. Data is generated, a recurrent model is initialized, trained and evaluated."""
     bidirectional=params.bidirectional
     detalization=params.detalization
     rev=params.rev
+    early_early_stop=params.early_early_stop
     architecture=params.architecture
     curriculum=lookup[params.curriculum]
     EMBEDDING_DIM = params.emb_dim
@@ -119,10 +120,12 @@ def train(params,report,seed,debug=False,det_f="detf.txt"):
                 print('New Best Dev!!!')
                 torch.save(model.state_dict(), 'best_models/best_model_acc_' + str(int(test_acc*10000)) + '.model')
             no_up = 0
+            if best_dev_acc==1.0 and early_early_stop=True: break
         else:
             no_up += 1
             if no_up >= 22:
                 break
+            
     
     def statsbysize(dataset):
         bysize=defaultdict(list)
@@ -183,7 +186,7 @@ def detailed_results(model, data, resf, loss_function, word_to_ix, label_to_ix, 
         sent = data_loader.prepare_sequence(sent, word_to_ix, rev=rev)
         label = data_loader.prepare_label(label, label_to_ix)
         pred = model(sent)
-        pred_label = ix_to_label(pred.data.max(1)[1].numpy()[0])
+        pred_label = ix_to_label[pred.data.max(1)[1].numpy()[0]]
         pred_res.append(pred_label)
         loss = loss_function(pred, label)
         losses.append(loss.item())
@@ -231,6 +234,7 @@ parser.add_argument('--cur', dest='curriculum', type=str, default="gentle_curric
 parser.add_argument('--arch', dest='architecture', type=str, default="LSTM")
 parser.add_argument('--bidir', dest='bidirectional', type=bool, default=False)
 parser.add_argument('--detail', dest='detalization', type=bool, default=False)
+parser.add_argument('--early', dest='early_early_stop', type=bool, default=False)
 parser.add_argument('--embdim', dest='emb_dim', type=int, default=256)
 parser.add_argument('--epochs', dest='epochs', type=int, default=100)
 parser.add_argument('--hidden', dest='hidden', type=int, default=256)
