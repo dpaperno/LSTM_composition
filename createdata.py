@@ -141,8 +141,9 @@ class InterpretedLanguage:
         sample = []
         for c in range(min_complexity,complexity+1): sample+=self.examples(c)
         for e in sample:
+	#both the logical form and referent identifier are mapped to a readable English form if possible:
             line=self.translate(self.express(e,b))
-            category=self.translate(self.interpret(e))
+            category=self.translate(self.interpret(e))[0]
             z.append((line,category))
         return z
 
