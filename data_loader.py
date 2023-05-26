@@ -82,7 +82,7 @@ def load_data(params):
     print('train:',len(train_data),'dev:',len(dev_data),'test:',len(test_data))
 
     word_to_ix = build_token_to_ix([s for s,_ in train_data+dev_data+test_data])
-    label_to_ix = {val:idx for idx,val in enumerate(L.names)}
+    label_to_ix = {val:idx for idx,val in enumerate([L.translate(x)[0] for x in L.names])}
     print('vocab size:',len(word_to_ix),'label size:',len(label_to_ix))
     print('loading data done!')
     return train_data,dev_data,test_data,word_to_ix,label_to_ix,complexity
