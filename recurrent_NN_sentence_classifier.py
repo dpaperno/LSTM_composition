@@ -83,8 +83,9 @@ def get_accuracy(truth, pred):
              right += 1.0
      return right/len(truth)
 
-def train(params,report,seed,debug=False,det_f="detf.txt",early_early_stop=False):
+def train(params,report,seed,debug=False,early_early_stop=False):
     """Action happens here for a single run. Data is generated, a recurrent model is initialized, trained and evaluated."""
+    det_f=params.detalizationFile
     bidirectional=params.bidirectional
     detalization=params.detalization
     rev=params.rev
@@ -120,7 +121,7 @@ def train(params,report,seed,debug=False,det_f="detf.txt",early_early_stop=False
                 print('New Best Dev!!!')
                 torch.save(model.state_dict(), 'best_models/best_model_acc_' + str(int(test_acc*10000)) + '.model')
             no_up = 0
-            if best_dev_acc==1.0 and early_early_stop=True: break
+            if best_dev_acc==1.0 and early_early_stop: break
         else:
             no_up += 1
             if no_up >= 22:
@@ -228,6 +229,7 @@ parser.add_argument('--num_pairs', dest='num_pairs', type=int, default=2)
 parser.add_argument('--num_rels', dest='rel_num', type=int, default=2)
 parser.add_argument('-c', dest='complexity', type=int, default=3)
 parser.add_argument('-b', dest='branching', type=str, default="l")
+parser.add_argument('-df', dest='detalizationFile', type=str, default="detf.txt")
 parser.add_argument('--top_complexity_in_train', dest='top_complexity_share_in_training', type=float, default=0.8)
 parser.add_argument('--rev', dest='rev', type=bool, default=False)
 parser.add_argument('--cur', dest='curriculum', type=str, default="gentle_curriculum")
